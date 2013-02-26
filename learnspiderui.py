@@ -234,6 +234,8 @@ class PyApp(gtk.Window):
 			i+=1
 
 	def on_course_changed(self, treeview):
+		if self.coursesview == None or self.coursesview.get_cursor()[0] == None:
+			return
 		i = self.coursesview.get_cursor()[0][0]
 		if i > 0:
 			courseid = self.courses[i-1][0]
