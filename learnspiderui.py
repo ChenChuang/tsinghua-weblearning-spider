@@ -417,6 +417,8 @@ class PyApp(gtk.Window):
 		self.dialog.run()
 
 	def open_connectdb_dialog(self):
+		self.isdbconnected = False
+
 		self.connectdb_label = gtk.Label("请输入数据库用户名和密码")
 		
 		self.dbip = gtk.Entry()
@@ -457,6 +459,7 @@ class PyApp(gtk.Window):
 	def on_btn_connectdb_clicked(self, button):
 		try:
 			dbmanager.connectdb(self.dbip.get_text(), self.dbusername.get_text(), self.dbpassword.get_text())
+			self.isdbconnected = True
 			self.dialog.destroy()
 			self.on_connectdb_succeed()
 		except Exception,e:
@@ -466,8 +469,8 @@ class PyApp(gtk.Window):
 			md.destroy()
 
 	def on_dialog_connectdb_close(self, dialog):
-		gtk.main_quit()
-
+		if not self.isdbconnected:
+			gtk.main_quit()
 		
 
 class MyThread(threading.Thread):  
