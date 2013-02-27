@@ -5,11 +5,11 @@ from parsers import CoursesParser, NoticesParser, DocumentsParser, AssignmentsPa
 conn = None
 cursor = None
 
-def connectdb(hostname, username, password):
+def connectdb():
 	global conn
 	global cursor
 
-	conn = MySQLdb.connect(host=hostname,user=username,passwd=password,db="learnspiderdb",charset="utf8")  
+	conn = MySQLdb.connect(host="localhost",user="root",passwd="123456",db="learnspiderdb",charset="utf8")  
 	cursor = conn.cursor()
 
 def closedb():

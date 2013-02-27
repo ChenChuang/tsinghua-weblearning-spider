@@ -16,15 +16,11 @@ class PyApp(gtk.Window):
 	def __init__(self):
 		super(PyApp, self).__init__()
 
-		try:
-			dbmanager.connectdb()
-		except Exception,e:
-			print str(e)
-			md = gtk.MessageDialog(self,gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_INFO,gtk.BUTTONS_CLOSE, "数据库连接错误")
-			md.run()
-			md.destroy()
+		self.open_connectdb_dialog()
 
 		#dbmanager.setAllIsRead(True)
+
+	def on_connectdb_succeed(self):
 
 		self.starting = True
 
@@ -36,7 +32,7 @@ class PyApp(gtk.Window):
 		if os.path.dirname(__file__) == '':
 			self.set_icon_from_file("toast.png")
 		else:
-			self.set_icon_from_file(os.path.dirname(__file__) + "toast.png")
+			self.set_icon_from_file(os.path.dirname(__file__) + "/toast.png")
 		self.set_border_width(5)
 
 		hbox = gtk.HBox(False, 5)
@@ -234,6 +230,8 @@ class PyApp(gtk.Window):
 			i+=1
 
 	def on_course_changed(self, treeview):
+		if self.coursesview == None or self.coursesview.get_cursor()[0] == None:
+			return
 		i = self.coursesview.get_cursor()[0][0]
 		if i > 0:
 			courseid = self.courses[i-1][0]
@@ -418,6 +416,59 @@ class PyApp(gtk.Window):
 		self.dialog.show_all()	
 		self.dialog.run()
 
+	def open_connectdb_dialog(self):
+		self.connectdb_label = gtk.Label("请输入数据库用户名和密码")
+		
+		self.dbip = gtk.Entry()
+		self.dbip.set_text('127.0.0.1')
+
+		self.dbusername = gtk.Entry()
+		self.dbusername.set_text('root')
+
+		self.dbpassword = gtk.Entry()
+		self.dbpassword.set_visibility(False)
+
+		self.connectdb_btn = gtk.Button("连接")
+		self.connectdb_btn.connect('clicked',self.on_btn_connectdb_clicked)
+
+		valign1 = gtk.Alignment(0.5, 1, 1, 0)
+		valign1.set_padding(20, 20, 0, 0)
+		valign1.add(self.connectdb_label)
+		valign2 = gtk.Alignment(0.5, 1, 0.5, 0)
+		valign2.add(self.dbip)
+		valign3 = gtk.Alignment(0.5, 1, 0.5, 0)
+		valign3.add(self.dbusername)
+		valign4 = gtk.Alignment(0.5, 1, 0.5, 0)
+		valign4.add(self.dbpassword)
+		valign5 = gtk.Alignment(0.5, 1, 0.5, 0)
+		valign5.add(self.connectdb_btn)
+
+		self.dialog = gtk.Dialog("连接数据库",self,gtk.DIALOG_MODAL)
+		self.dialog.vbox.set_size_request(300,250)
+		self.dialog.vbox.pack_start(valign1)
+		self.dialog.vbox.pack_start(valign2)
+		self.dialog.vbox.pack_start(valign3)
+		self.dialog.vbox.pack_start(valign4)
+		self.dialog.vbox.pack_start(valign5)
+		self.dialog.connect('destroy',self.on_dialog_connectdb_close)
+		self.dialog.show_all()	
+		self.dialog.run()
+
+	def on_btn_connectdb_clicked(self, button):
+		try:
+			dbmanager.connectdb("localhost", self.dbusername.get_text(), self.dbpassword.get_text())
+			self.dialog.destroy()
+			self.on_connectdb_succeed()
+		except Exception,e:
+			print str(e)
+			md = gtk.MessageDialog(self,gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_INFO,gtk.BUTTONS_CLOSE, "数据库连接错误")
+			md.run()
+			md.destroy()
+
+	def on_dialog_connectdb_close(self, dialog):
+		gtk.main_quit()
+
+		
 
 class MyThread(threading.Thread):  
 	def __init__(self, pyapp, username, password):  
