@@ -1,6 +1,7 @@
 #encoding=utf-8
 import urllib2
 import urllib
+import socket
 import cookielib
 import gobject
 import gtk
@@ -16,12 +17,29 @@ DOCUMENT_PRE = "http://learn.tsinghua.edu.cn"
 ASSIGNMENT_PRE = "http://learn.tsinghua.edu.cn/MultiLanguage/lesson/student/"
 DISCUSSION_PRE = "http://learn.tsinghua.edu.cn/MultiLanguage/public/bbs/"
 
+quit = False
+quit_succeed = False
+
 def spidermove(username,password):
-	#login("chenchuang12","VKJ4RA6R")
+	global quit_succeed
+
+	socket.setdefaulttimeout(5)
+	quit_succeed = False
+
+	print "正在登录..."
 	login(username,password)
+	print "登录成功"
+
 	#dbmanager.connectdb()
+	print "正在读取数据..."
 	readcourses()
+	print "数据读取完成"
 	#dbmanager.closedb()
+	
+	cookie = None
+	opener = None
+
+	quit_succeed = True
 
 def login(user,password):
 	global cookie
@@ -36,10 +54,15 @@ def login(user,password):
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookie))
 	opener.addheaders = [('User-agent','Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:17.0) Gecko/17.0 Firefox/17.0')]
 	data = urllib.urlencode({"userid":user,"userpass":password})
-	opener.open(LOGIN_PAGE_1,data)
-	opener.open(LOGIN_PAGE_2)
-	opener.open(LOGIN_PAGE_3)
-	opener.open(LOGIN_PAGE_4)
+
+	if not quit: 
+		opener.open(LOGIN_PAGE_1,data)
+	if not quit: 
+		opener.open(LOGIN_PAGE_2)
+	if not quit: 
+		opener.open(LOGIN_PAGE_3)
+	if not quit: 
+		opener.open(LOGIN_PAGE_4)
 
 def readcourses():
 	global cookie
@@ -47,17 +70,26 @@ def readcourses():
 
 	COURSES_PAGE = "http://learn.tsinghua.edu.cn/MultiLanguage/lesson/student/MyCourse.jsp?language=cn"
 	
+	print "正在读取：所有课程名称..."
 	data = opener.open(COURSES_PAGE).read()
 	coursesparser = CoursesParser()
 	coursesparser.feed(data)
 	dbmanager.refreshCoursesdb(coursesparser)
 
 	for i in range(0,len(coursesparser.urls)):
-		print coursesparser.names[i]
-		readNoticesbyCourse(coursesparser.ids[i], coursesparser.names[i]);
-		readDocumentsbyCourse(coursesparser.ids[i], coursesparser.names[i]);
-		readAssignmentsbyCourse(coursesparser.ids[i], coursesparser.names[i]);
-		readDiscussionsbyCourse(coursesparser.ids[i], coursesparser.names[i]);
+		print '------',coursesparser.names[i],'------'
+		print "正在读取：课程公告..."
+		if not quit: 
+			readNoticesbyCourse(coursesparser.ids[i], coursesparser.names[i]);
+		print "正在读取：课程文件..."
+		if not quit: 
+			readDocumentsbyCourse(coursesparser.ids[i], coursesparser.names[i]);
+		print "正在读取：课程作业..."
+		if not quit: 
+			readAssignmentsbyCourse(coursesparser.ids[i], coursesparser.names[i]);
+		print "正在读取：课程讨论..."
+		if not quit: 
+			readDiscussionsbyCourse(coursesparser.ids[i], coursesparser.names[i]);
 
 
 def readNoticesbyCourse(courseid, coursename):
